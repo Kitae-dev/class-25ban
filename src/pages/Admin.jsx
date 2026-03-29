@@ -91,7 +91,7 @@ export default function Admin() {
 }
 
 // ── 공지 관리 ─────────────────────────────────────────────
-const EMPTY_N = { title:'', body:'', category:'general', subject:'', due_date:'', is_pinned:false }
+const EMPTY_N = { title:'', body:'', category:'general', subject:'', due_date:'', due_time:'', is_pinned:false }
 
 function NoticeAdmin() {
   const [items,    setItems]    = useState([])
@@ -110,7 +110,21 @@ function NoticeAdmin() {
   useEffect(() => { load() }, [load])
 
   const openNew  = () => { setEditing(null); setForm(EMPTY_N); setShowForm(true) }
-  const openEdit = (n) => { setEditing(n.id); setForm({ title:n.title, body:n.body, category:n.category, subject:n.subject||'', due_date:n.due_date||'', is_pinned:n.is_pinned }); setShowForm(true) }
+  const openEdit = (n) => {
+    setEditing(n.id)
+    const raw = n.due_date || ''
+    const parts = raw.split(' ')
+    setForm({
+      title:    n.title,
+      body:     n.body,
+      category: n.category,
+      subject:  n.subject  || '',
+      due_date: parts[0]   || '',
+      due_time: parts[1]   || '',
+      is_pinned: n.is_pinned
+    })
+    setShowForm(true)
+  }
   const close    = () => { setShowForm(false); setEditing(null) }
 
   const save = async () => {
@@ -118,7 +132,8 @@ function NoticeAdmin() {
     if (!form.body.trim())  { alert('내용을 입력해 주세요.'); return }
     setSaving(true)
     try {
-      const payload = { title:form.title.trim(), body:form.body.trim(), category:form.category, subject:form.subject.trim()||null, due_date:form.due_date.trim()||null, is_pinned:form.is_pinned }
+      const due = [form.due_date.trim(), form.due_time.trim()].filter(Boolean).join(' ')
+      const payload = { title:form.title.trim(), body:form.body.trim(), category:form.category, subject:form.subject.trim()||null, due_date:due||null, is_pinned:form.is_pinned }
       if (editing) await dbUpdate('class_notices', editing, { ...payload, updated_at:new Date().toISOString() })
       else await dbInsert('class_notices', payload)
       close(); await load()
@@ -147,10 +162,36 @@ function NoticeAdmin() {
               {CAT_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.icon} {o.label}</option>)}
             </select>
           </FField>
+          <FField label="과목">
+            <input value={form.subject} onChange={e=>F('subject',e.target.value)} placeholder="예: 수학" style={iStyle} />
+          </FField>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
-            <FField label="과목"><input value={form.subject} onChange={e=>F('subject',e.target.value)} placeholder="예: 수학" style={iStyle} /></FField>
-            <FField label="마감일"><input value={form.due_date} onChange={e=>F('due_date',e.target.value)} placeholder="예: 내일까지" style={iStyle} /></FField>
+            <FField label="마감 날짜 📅">
+              <input
+                type="date"
+                value={form.due_date}
+                onChange={e=>F('due_date',e.target.value)}
+                style={{...iStyle, colorScheme:'light'}}
+              />
+            </FField>
+            <FField label="마감 시간 ⏰">
+              <input
+                type="time"
+                value={form.due_time}
+                onChange={e=>F('due_time',e.target.value)}
+                style={{...iStyle, colorScheme:'light'}}
+              />
+            </FField>
           </div>
+          {form.due_date && (
+            <div style={{
+              background:'#f5f3ff', borderRadius:'8px', padding:'9px 13px',
+              fontSize:'13px', color:'#5b21b6', fontWeight:600, marginBottom:'10px',
+              display:'flex', alignItems:'center', gap:'6px'
+            }}>
+              ⏰ 마감: {new Date(form.due_date + (form.due_time ? 'T'+form.due_time : '')).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'})}{form.due_time ? ' ' + form.due_time : ''}
+            </div>
+          )}
           <FField label="제목 *"><input value={form.title} onChange={e=>F('title',e.target.value)} placeholder="공지 제목" style={iStyle} /></FField>
           <FField label="내용 *">
             <textarea value={form.body} onChange={e=>F('body',e.target.value)} placeholder="내용을 입력하세요" rows={5} style={{...iStyle,resize:'vertical'}} />

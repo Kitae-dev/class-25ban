@@ -2,6 +2,17 @@ import React, { useState, useEffect, useCallback } from 'react'
 import supabase from '../lib/supabase.js'
 import { Label, Empty, Spinner } from './NoticeView.jsx'
 
+function formatDue(due) {
+  if (!due) return ''
+  const [datePart, timePart] = due.split(' ')
+  if (!datePart) return due
+  try {
+    const d = new Date(datePart + 'T' + (timePart || '00:00'))
+    const dateStr = d.toLocaleDateString('ko-KR', { month:'long', day:'numeric', weekday:'short' })
+    return timePart ? dateStr + ' ' + timePart : dateStr
+  } catch { return due }
+}
+
 const SUB_CATS = [
   { value:'homework',    label:'과제',    icon:'📚', color:'#2563eb', bg:'#dbeafe' },
   { value:'supplies',    label:'준비물',  icon:'🎒', color:'#059669', bg:'#d1fae5' },
@@ -101,7 +112,7 @@ function HomeworkCard({ item, meta }) {
           <p style={{ fontSize:'13px', color: done ? 'var(--muted)' : '#4b5563', lineHeight:1.7, whiteSpace:'pre-wrap' }}>{item.body}</p>
           {item.due_date && (
             <div style={{ display:'flex', alignItems:'center', gap:'4px', marginTop:'8px' }}>
-              <span style={{ fontSize:'12px', color: done ? 'var(--muted)' : 'var(--red)', fontWeight:700 }}>⏰ 마감: {item.due_date}</span>
+              <span style={{ fontSize:'12px', color: done ? 'var(--muted)' : 'var(--red)', fontWeight:700 }}>⏰ 마감: {formatDue(item.due_date)}</span>
             </div>
           )}
         </div>

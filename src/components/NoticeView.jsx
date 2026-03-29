@@ -2,6 +2,17 @@ import React, { useState, useEffect, useCallback } from 'react'
 import supabase from '../lib/supabase.js'
 import { getSessionId } from '../lib/session.js'
 
+function formatDue(due) {
+  if (!due) return ''
+  const [datePart, timePart] = due.split(' ')
+  if (!datePart) return due
+  try {
+    const d = new Date(datePart + 'T' + (timePart || '00:00'))
+    const dateStr = d.toLocaleDateString('ko-KR', { month:'long', day:'numeric', weekday:'short' })
+    return timePart ? dateStr + ' ' + timePart : dateStr
+  } catch { return due }
+}
+
 const CATS = [
   { value:'all',         label:'전체',   icon:'📋', color:'#7c3aed', bg:'#ede9fe' },
   { value:'performance', label:'수행평가', icon:'📝', color:'#dc2626', bg:'#fee2e2' },
@@ -93,7 +104,9 @@ function NoticeCard({ notice, expanded, onToggle }) {
         </div>
         <h3 style={{ fontSize:'15px', fontWeight:700, lineHeight:1.4, color:'var(--text)' }}>{notice.title}</h3>
         {notice.due_date && (
-          <p style={{ fontSize:'12px', color:'var(--red)', fontWeight:600, marginTop:'5px' }}>⏰ 마감: {notice.due_date}</p>
+          <p style={{ fontSize:'12px', color:'var(--red)', fontWeight:600, marginTop:'5px' }}>
+            ⏰ 마감: {formatDue(notice.due_date)}
+          </p>
         )}
         {!expanded && (
           <p style={{ fontSize:'13px', color:'var(--muted)', marginTop:'5px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
