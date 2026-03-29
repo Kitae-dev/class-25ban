@@ -4,12 +4,16 @@ import { getSessionId } from '../lib/session.js'
 
 function formatDue(due) {
   if (!due) return ''
-  const [datePart, timePart] = due.split(' ')
-  if (!datePart) return due
+  // 'YYYY-MM-DD HH:mm' 또는 'YYYY-MM-DD' 형식 처리
+  const parts = due.trim().split(' ')
+  const datePart = parts[0]
+  const timePart = parts[1] || null
+  // 날짜 형식이 아니면 (예: 기존 텍스트 '내일까지') 그대로 반환
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return due
   try {
-    const d = new Date(datePart + 'T' + (timePart || '00:00'))
+    const d = new Date(datePart + 'T00:00:00')
     const dateStr = d.toLocaleDateString('ko-KR', { month:'long', day:'numeric', weekday:'short' })
-    return timePart ? dateStr + ' ' + timePart : dateStr
+    return timePart ? `${dateStr} ${timePart}` : dateStr
   } catch { return due }
 }
 

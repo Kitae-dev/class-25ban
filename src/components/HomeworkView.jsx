@@ -4,10 +4,12 @@ import { Label, Empty, Spinner } from './NoticeView.jsx'
 
 function formatDue(due) {
   if (!due) return ''
-  const [datePart, timePart] = due.split(' ')
-  if (!datePart) return due
+  const parts = due.trim().split(' ')
+  const datePart = parts[0]
+  const timePart = parts[1] || null
+  if (!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(datePart)) return due
   try {
-    const d = new Date(datePart + 'T' + (timePart || '00:00'))
+    const d = new Date(datePart + 'T00:00:00')
     const dateStr = d.toLocaleDateString('ko-KR', { month:'long', day:'numeric', weekday:'short' })
     return timePart ? dateStr + ' ' + timePart : dateStr
   } catch { return due }

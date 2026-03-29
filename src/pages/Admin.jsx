@@ -189,7 +189,13 @@ function NoticeAdmin() {
               fontSize:'13px', color:'#5b21b6', fontWeight:600, marginBottom:'10px',
               display:'flex', alignItems:'center', gap:'6px'
             }}>
-              ⏰ 마감: {new Date(form.due_date + (form.due_time ? 'T'+form.due_time : '')).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'})}{form.due_time ? ' ' + form.due_time : ''}
+              {(() => {
+                try {
+                  const d = new Date(form.due_date + 'T00:00:00')
+                  const dateStr = d.toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short' })
+                  return '⏰ 마감: ' + dateStr + (form.due_time ? ' ' + form.due_time : '')
+                } catch { return '⏰ 마감: ' + form.due_date + (form.due_time ? ' ' + form.due_time : '') }
+              })()}
             </div>
           )}
           <FField label="제목 *"><input value={form.title} onChange={e=>F('title',e.target.value)} placeholder="공지 제목" style={iStyle} /></FField>
